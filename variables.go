@@ -12,4 +12,4 @@ var (
 )
 
 // MagicBytes represents the format signature
-var MagicBytes = []byte{'B', 'M'}
+var MagicBytes = []byte{66, 77}

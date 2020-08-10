@@ -5,13 +5,34 @@ import (
 	"testing"
 )
 
+var images = []string{
+	"1bit.bmp",
+	"1bitcolor.bmp",
+	"4bit.bmp",
+	"4bitcompressed.bmp",
+	"8bit.bmp",
+	"8bitcompressed.bmp",
+	"8bitgray.bmp",
+	"24bit.bmp",
+	"color256.bmp",
+	"notBMP.bmp",
+}
+
 func TestReadBMP(t *testing.T) {
 
-	file, err := os.Open("images/8bit.bmp")
-	if err != nil {
-		t.Fatal(err)
+	for i := range images {
+		path := "images/" + images[i]
+		file, err := os.Open(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer file.Close()
+
+		_, err = Read(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// t.Logf("\n%+v\n", img)
 	}
-
-	t.Logf("\n%+v\n", file)
-
 }

@@ -17,21 +17,21 @@ func inRangeByte(a, b, c byte) bool {
 	return true
 }
 
-// Uint32FromLSBytes reverse function is LSBytesFromUint32
-func Uint32FromLSBytes(b []byte) uint32 {
-	if len(b) != 4 {
-		log.Panicf("bmp: Slice must be exactly 4 bytes\n")
-	}
-	var rc uint32
-	rc = uint32(b[3])
-	rc <<= 8
-	rc |= uint32(b[2])
-	rc <<= 8
-	rc |= uint32(b[1])
-	rc <<= 8
-	rc |= uint32(b[0])
-	return rc
-}
+// // Uint32FromLSBytes reverse function is LSBytesFromUint32
+// func Uint32FromLSBytes(b []byte) uint32 {
+// 	if len(b) != 4 {
+// 		log.Panicf("bmp: Slice must be exactly 4 bytes\n")
+// 	}
+// 	var rc uint32
+// 	rc = uint32(b[3])
+// 	rc <<= 8
+// 	rc |= uint32(b[2])
+// 	rc <<= 8
+// 	rc |= uint32(b[1])
+// 	rc <<= 8
+// 	rc |= uint32(b[0])
+// 	return rc
+// }
 
 // Uint16FromLSBytes reverse function is LSBytesFromUint16
 func Uint16FromLSBytes(b []byte) uint16 {
