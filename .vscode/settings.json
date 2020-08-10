@@ -1,0 +1,8 @@
+{
+    "workbench.colorTheme": "Monokai",
+    "go.useLanguageServer": false,
+    "go.testFlags": [
+        "-v",
+        "-count=1"
+    ],
+}
