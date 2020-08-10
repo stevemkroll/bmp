@@ -1,5 +1,3 @@
-// bmpBit1.go
-
 package bmp
 
 import (
@@ -41,25 +39,15 @@ func unPack8(b byte) [8]byte {
 }
 
 // decodePaletted1 reads a 1 bit-per-pixel BMP image from r.
-func decodePaletted1(r io.Reader, c image.Config, b *BMP_T) (image.Image, error) {
-	verbose.Printf("Entry to decodePaletted1\n")
-	maxBits := len(b.aBitMapBits)
-
+func decodePaletted1(r io.Reader, c image.Config, b *BMP) (image.Image, error) {
+	maxBits := len(b.ImageData)
 	paletted := image.NewPaletted(image.Rect(0, 0, c.Width, c.Height), c.ColorModel.(color.Palette))
 	br := bufio.NewReader(r)
 	var bytesRead int
-	verbose.Printf("Height = %d   Width = %d  H*W = %d\n", c.Height, c.Width, c.Height*c.Width)
-	verbose.Printf("maxBits = %d\n", maxBits<<3)
-	verbose.Printf("paletted.Stride(%d)\n", paletted.Stride)
 	lastPix := c.Height * c.Width
-	dataSize := b.Infoheader.SizeImage << 3
-	verbose.Printf("lastPix(%d) dataSize(%d)\n", lastPix, dataSize)
-	// N.B. BMP images are stored bottom-up rather than top-down, left to right
-	verbose.Printf("b.infoheader.biSizeImage/c.Height(%d)\n", b.Infoheader.SizeImage/uint32(c.Height))
-	verbose.Printf("width mod 8 = %d\n", c.Width%8)
+	_ = b.DIBHeader.ImageSize << 3
 	rowWidth := c.Width / 8
 	rowXtra := c.Width - (rowWidth * 8)
-	verbose.Printf("rowWidth(%d) rowXtra(%d)\n", rowWidth, rowXtra)
 
 	for y := c.Height - 1; y >= 0; y-- {
 		var pix8 byte
@@ -79,13 +67,13 @@ func decodePaletted1(r io.Reader, c image.Config, b *BMP_T) (image.Image, error)
 			start = x + (y * c.Width)
 			finish = start + 8
 			if finish > lastPix {
-				verbose.Printf("LastPix\n")
+				// verbose.Printf("LastPix\n")
 				finish = lastPix
 			}
 			if start > lastPix {
 				start = lastPix
 			}
-			verbose.Printf("start(%d) finish(%d) byte[%d]  %v\n", start, finish, bytesRead, b)
+			// verbose.Printf("start(%d) finish(%d) byte[%d]  %v\n", start, finish, bytesRead, b)
 			copy(paletted.Pix[start:finish], b[:])
 		}
 		// last byte of scanline may not have all bits used so piece it out
@@ -100,13 +88,13 @@ func decodePaletted1(r io.Reader, c image.Config, b *BMP_T) (image.Image, error)
 			start += 8
 			finish = start + rowXtra
 			if finish > lastPix {
-				verbose.Printf("LastPix\n")
+				// verbose.Printf("LastPix\n")
 				finish = lastPix
 			}
 			if start > lastPix {
 				start = lastPix
 			}
-			verbose.Printf("+start(%d) finish(%d) byte[%d]  %v\n", start, finish, bytesRead, b)
+			// verbose.Printf("+start(%d) finish(%d) byte[%d]  %v\n", start, finish, bytesRead, b)
 			copy(paletted.Pix[start:finish], b[:rowXtra])
 		}
 		// scanlines are padded if necessary to multiple of uint32 (DWORD)
@@ -120,7 +108,7 @@ func decodePaletted1(r io.Reader, c image.Config, b *BMP_T) (image.Image, error)
 				return nil, err
 			}
 			bytesRead++
-			verbose.Printf("byte[%d]\n", bytesRead)
+			// verbose.Printf("byte[%d]\n", bytesRead)
 		}
 	}
 	return paletted, nil

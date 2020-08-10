@@ -1,5 +1,3 @@
-// bmprle4.go
-
 package bmp
 
 import (
@@ -20,25 +18,21 @@ func unPack2(b byte) [2]byte {
 	return x
 }
 
-func unwindRLE4(r io.Reader, b *BMP_T) ([]byte, error) {
-	maxReadBytes := len(b.aBitMapBits)
-	verbose.Printf("Entry to unwindRLE4\n")
-	verbose.Printf("Height = %d   Width = %d  H*W = %d\n",
-		b.Infoheader.Height, b.Infoheader.Width, b.Infoheader.Height*b.Infoheader.Width)
-	verbose.Printf("maxBits = %d\n", maxReadBytes)
-	rowWidth := b.Infoheader.Width
+func unwindRLE4(r io.Reader, b *BMP) ([]byte, error) {
+	maxReadBytes := len(b.ImageData)
+	rowWidth := b.DIBHeader.Width
 	if (rowWidth % 2) != 0 {
 		rowWidth++
 	}
 	// use uncompressed size/2 as rough cap for pixMap
-	pixMap := make([]byte, 0, b.Infoheader.Height*rowWidth/2)
+	pixMap := make([]byte, 0, b.DIBHeader.Height*rowWidth/2)
 
-	verbose.Printf("PixMap will be [%d] when full\n", b.Infoheader.Height*rowWidth/2)
+	// verbose.Printf("PixMap will be [%d] when full\n", b.DIBHeader.Height*rowWidth/2)
 	br := bufio.NewReader(r)
-	//BOF := b.fileheader.bfOffsetBits % 4
+	//BOF := b.Header.bfOffsetBits % 4
 	bytesRead := 0
 	lineCt := 0
-	verbose.Printf("len(pixMap)=%d cap(pixMap)=%d\n", len(pixMap), cap(pixMap))
+	// verbose.Printf("len(pixMap)=%d cap(pixMap)=%d\n", len(pixMap), cap(pixMap))
 	for {
 		if len(pixMap) == cap(pixMap) {
 			break
@@ -53,7 +47,7 @@ func unwindRLE4(r io.Reader, b *BMP_T) ([]byte, error) {
 		} else {
 			bytesRead++
 		}
-		verbose.Printf("byte at hexoffset(%x), numPix(%x)\n", bytesRead, numPix)
+		// verbose.Printf("byte at hexoffset(%x), numPix(%x)\n", bytesRead, numPix)
 		pixVal, err := br.ReadByte()
 		if err != nil {
 			log.Printf("bmp: bad read in RLE4\n")
@@ -61,9 +55,9 @@ func unwindRLE4(r io.Reader, b *BMP_T) ([]byte, error) {
 		} else {
 			bytesRead++
 		}
-		verbose.Printf("byte at hexoffset(%x), pixVal(%x)\n", bytesRead, pixVal)
+		// verbose.Printf("byte at hexoffset(%x), pixVal(%x)\n", bytesRead, pixVal)
 		if numPix > 0 { //  encoded mode
-			//verbose.Printf("copying %d encoded pixels\n", numPix)
+			//// verbose.Printf("copying %d encoded pixels\n", numPix)
 			loopCt := numPix / 2
 			loopXtra := numPix - (loopCt * 2)
 			for x := 0; x < int(loopCt); x++ {
@@ -81,17 +75,17 @@ func unwindRLE4(r io.Reader, b *BMP_T) ([]byte, error) {
 						if (len(pixMap) % 4) == 0 {
 							break
 						}
-						//verbose.Printf("Padding line with 0\n")
+						//// verbose.Printf("Padding line with 0\n")
 						pixMap = append(pixMap, 0)
 					}
-					verbose.Printf("end of line signal found  ")
+					// verbose.Printf("end of line signal found  ")
 					lineCt++
-					verbose.Printf("len(pixMap)=%d  cap(pixMap)=%d   bytesRead(%d) lineCt(%d)\n", len(pixMap), cap(pixMap), bytesRead, lineCt)
+					// verbose.Printf("len(pixMap)=%d  cap(pixMap)=%d   bytesRead(%d) lineCt(%d)\n", len(pixMap), cap(pixMap), bytesRead, lineCt)
 					continue
 				case 1: // end of bitmap
-					verbose.Printf("end of pixmap source signal found  ")
+					// verbose.Printf("end of pixmap source signal found  ")
 					lineCt++
-					verbose.Printf("len(pixMap)=%d  cap(pixMap)=%d   bytesRead(%d) lineCt(%d)\n", len(pixMap), cap(pixMap), bytesRead, lineCt)
+					// verbose.Printf("len(pixMap)=%d  cap(pixMap)=%d   bytesRead(%d) lineCt(%d)\n", len(pixMap), cap(pixMap), bytesRead, lineCt)
 					goto xit
 				case 2: // Delta
 					// BUG(mdr): TODO - delta encoding not handled in unwindRLE4
@@ -110,13 +104,13 @@ func unwindRLE4(r io.Reader, b *BMP_T) ([]byte, error) {
 				return nil, ErrCantHappen
 			}
 			numPix = pixVal
-			verbose.Printf("copying %d absolute pixels\n", numPix)
+			// verbose.Printf("copying %d absolute pixels\n", numPix)
 			loopCt := numPix / 2
 			loopXtra := numPix - (loopCt * 2)
 			for x := 0; x < int(loopCt); x++ {
 				pixVal, err := br.ReadByte()
 				if err != nil {
-					verbose.Printf("bytesRead(%d)\n", bytesRead)
+					// verbose.Printf("bytesRead(%d)\n", bytesRead)
 					log.Printf("bmp: bad read in RLE4\n")
 					return nil, err
 				} else {
@@ -131,7 +125,7 @@ func unwindRLE4(r io.Reader, b *BMP_T) ([]byte, error) {
 			if (bytesRead % 2) != 0 { // absolute run must end at word boundary
 				_, err := br.ReadByte()
 				if err != nil {
-					verbose.Printf("bytesRead(%d)\n", bytesRead)
+					// verbose.Printf("bytesRead(%d)\n", bytesRead)
 					log.Printf("bmp: bad read in RLE4\n")
 					return nil, err
 				} else {
@@ -139,42 +133,42 @@ func unwindRLE4(r io.Reader, b *BMP_T) ([]byte, error) {
 				}
 			}
 		}
-		verbose.Printf("pixMap[%d]  bytesRead(%d)\n", len(pixMap), bytesRead)
+		// verbose.Printf("pixMap[%d]  bytesRead(%d)\n", len(pixMap), bytesRead)
 	}
 
 xit:
-	verbose.Printf("len(pixMap)=%d  cap(pixMap)=%d   bytesRead(%d) lineCt(%d)\n", len(pixMap), cap(pixMap), bytesRead, lineCt)
+	// verbose.Printf("len(pixMap)=%d  cap(pixMap)=%d   bytesRead(%d) lineCt(%d)\n", len(pixMap), cap(pixMap), bytesRead, lineCt)
 	if len(pixMap) != cap(pixMap) {
-		verbose.Printf("!Err-> mismatched len & cap - short by(%d)bytes is bad\n", cap(pixMap)-len(pixMap))
+		// verbose.Printf("!Err-> mismatched len & cap - short by(%d)bytes is bad\n", cap(pixMap)-len(pixMap))
 	}
-	if bytesRead != len(b.aBitMapBits) {
-		verbose.Printf("!Err-> mismatched len(source) & bytesRead is bad\n")
-		verbose.Printf("bytesRead is %d but should be %d\n", bytesRead, len(b.aBitMapBits))
+	if bytesRead != len(b.ImageData) {
+		// verbose.Printf("!Err-> mismatched len(source) & bytesRead is bad\n")
+		// verbose.Printf("bytesRead is %d but should be %d\n", bytesRead, len(b.ImageData))
 	}
 	// BUG(mdr): OVERKILL? - we fill out pixmap with null bytes if end of source data before map is full
 	for {
 		if len(pixMap) >= cap(pixMap) {
 			break
 		}
-		//verbose.Printf("padding map at exit\n")
+		//// verbose.Printf("padding map at exit\n")
 		pixMap = append(pixMap, 0x0)
 	}
-	b.aBitMapBits = pixMap
-	verbose.Printf("pixMap[%d]  bytesRead(%d)\n", len(pixMap), bytesRead)
-	verbose.Printf("Exit unwindRLE4() \n")
+	b.ImageData = pixMap
+	// verbose.Printf("pixMap[%d]  bytesRead(%d)\n", len(pixMap), bytesRead)
+	// verbose.Printf("Exit unwindRLE4() \n")
 	return pixMap, nil
 }
 
 // decodePaletted reads a 4 bit-per-pixel BMP image from r.
-func decodePaletted4(r io.Reader, c image.Config, b *BMP_T) (image.Image, error) {
-	maxBits := len(b.aBitMapBits)
-	verbose.Printf("Entry to decodePaletted4\n")
+func decodePaletted4(r io.Reader, c image.Config, b *BMP) (image.Image, error) {
+	maxBits := len(b.ImageData)
+	// verbose.Printf("Entry to decodePaletted4\n")
 	paletted := image.NewPaletted(image.Rect(0, 0, c.Width, c.Height), c.ColorModel.(color.Palette))
 	br := bufio.NewReader(r)
 	var bytesRead int
-	verbose.Printf("Height = %d   Width = %d  H*W = %d\n", c.Height, c.Width, c.Height*c.Width)
-	verbose.Printf("maxBits = %d\n", maxBits)
-	verbose.Printf("paletted.Stride(%d)\n", paletted.Stride)
+	// verbose.Printf("Height = %d   Width = %d  H*W = %d\n", c.Height, c.Width, c.Height*c.Width)
+	// verbose.Printf("maxBits = %d\n", maxBits)
+	// verbose.Printf("paletted.Stride(%d)\n", paletted.Stride)
 	lastPix := c.Height * c.Width
 	rowWidth := c.Width / 2
 	rowXtra := c.Width - (rowWidth * 2)
@@ -202,12 +196,12 @@ func decodePaletted4(r io.Reader, c image.Config, b *BMP_T) (image.Image, error)
 			if start > lastPix {
 				start = lastPix
 			}
-			//verbose.Printf("start(%d) finish(%d) byte[%d]  %v\n", start, finish, bytesRead, b)
+			//// verbose.Printf("start(%d) finish(%d) byte[%d]  %v\n", start, finish, bytesRead, b)
 			copy(paletted.Pix[start:finish], b[:])
 		}
 		// last byte of scanline may not have all bits used so piece it out
 		if rowXtra != 0 {
-			//verbose.Printf("adding last pixel to line\n")
+			//// verbose.Printf("adding last pixel to line\n")
 			pix2, err = br.ReadByte()
 			if err != nil {
 				log.Printf("bmp: bad read in Pal4\n")
@@ -218,13 +212,13 @@ func decodePaletted4(r io.Reader, c image.Config, b *BMP_T) (image.Image, error)
 			start += 2
 			finish = start + rowXtra
 			if finish > lastPix {
-				verbose.Printf("LastPix\n")
+				// verbose.Printf("LastPix\n")
 				finish = lastPix
 			}
 			if start > lastPix {
 				start = lastPix
 			}
-			//verbose.Printf("+start(%d) finish(%d) byte[%d]  %v\n", start, finish, bytesRead, b)
+			//// verbose.Printf("+start(%d) finish(%d) byte[%d]  %v\n", start, finish, bytesRead, b)
 			copy(paletted.Pix[start:finish], b[:rowXtra])
 		}
 		// scanlines are padded if necessary to multiple of uint32 (DWORD)
@@ -238,7 +232,7 @@ func decodePaletted4(r io.Reader, c image.Config, b *BMP_T) (image.Image, error)
 				return nil, err
 			}
 			bytesRead++
-			verbose.Printf("byte[%d]\n", bytesRead)
+			// verbose.Printf("byte[%d]\n", bytesRead)
 		}
 
 	}

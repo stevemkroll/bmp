@@ -1,5 +1,3 @@
-// bmpRGBA.go
-
 package bmp
 
 import (
@@ -10,12 +8,12 @@ import (
 
 // decodeRGBA reads a 24 bit-per-pixel BMP image from r.
 func decodeRGBA(r io.Reader, c image.Config) (image.Image, error) {
-	verbose.Printf("Entry to decodeRGBA\n")
-	verbose.Printf("c.Width(%d) c.Height(%d) c.ColorModel(%v)\n", c.Width, c.Height, c.ColorModel)
+	// verboseose.Printf("Entry to decodeRGBA\n")
+	// verboseose.Printf("c.Width(%d) c.Height(%d) c.ColorModel(%v)\n", c.Width, c.Height, c.ColorModel)
 	rgba := image.NewRGBA(image.Rect(0, 0, c.Width, c.Height))
 	// There are 3 bytes per pixel, and each row is 4-byte aligned.
 	b := make([]byte, (3*c.Width+3)&^3)
-	verbose.Printf("len(b) = %d\n", len(b))
+	// verboseose.Printf("len(b) = %d\n", len(b))
 	// BMP images are stored bottom-up rather than top-down.
 	for y := c.Height - 1; y >= 0; y-- {
 		n, err := r.Read(b)

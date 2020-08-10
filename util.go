@@ -1,11 +1,7 @@
-// util.go
-
 package bmp
 
 import (
-	"fmt"
 	"log"
-	"os"
 )
 
 func inRangeByte(a, b, c byte) bool {
@@ -21,13 +17,7 @@ func inRangeByte(a, b, c byte) bool {
 	return true
 }
 
-func FatalError(err error) {
-	fmt.Printf("%v\n", err)
-	os.Exit(1)
-}
-
-// reverse function is LSBytesFromUint32
-// test is
+// Uint32FromLSBytes reverse function is LSBytesFromUint32
 func Uint32FromLSBytes(b []byte) uint32 {
 	if len(b) != 4 {
 		log.Panicf("bmp: Slice must be exactly 4 bytes\n")
@@ -43,8 +33,7 @@ func Uint32FromLSBytes(b []byte) uint32 {
 	return rc
 }
 
-// reverse function is LSBytesFromUint16
-// test is
+// Uint16FromLSBytes reverse function is LSBytesFromUint16
 func Uint16FromLSBytes(b []byte) uint16 {
 	if len(b) != 2 {
 		log.Panicf("bmp: Slice must be exactly 2 bytes\n")
@@ -56,6 +45,7 @@ func Uint16FromLSBytes(b []byte) uint16 {
 	return rc
 }
 
+// Int64FromLSBytes ...
 func Int64FromLSBytes(b []byte) int64 {
 	if len(b) != 8 {
 		log.Panicf("bmp: Slice must be exactly 8 bytes\n")
@@ -75,6 +65,7 @@ func Int64FromLSBytes(b []byte) int64 {
 	return rv
 }
 
+// Int32FromLSBytes ...
 func Int32FromLSBytes(b []byte) int32 {
 	if len(b) != 4 {
 		log.Panicf("bmp: Slice must be exactly 4 bytes\n")
@@ -82,6 +73,7 @@ func Int32FromLSBytes(b []byte) int32 {
 	return int32(b[0]) | (int32(b[1]) << 8) | (int32(b[2]) << 16) | (int32(b[3]) << 24)
 }
 
+// Int16FromLSBytes ...
 func Int16FromLSBytes(b []byte) int16 {
 	if len(b) != 2 {
 		log.Panicf("bmp: Slice must be exactly 2 bytes\n")
