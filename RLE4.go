@@ -2,13 +2,10 @@ package bmp
 
 import (
 	"bufio"
-	//"bytes"
-	//"fmt"
 	"image"
 	"image/color"
 	"io"
 	"log"
-	//"os"
 )
 
 func unPack2(b byte) [2]byte {
@@ -19,15 +16,19 @@ func unPack2(b byte) [2]byte {
 }
 
 func unwindRLE4(r io.Reader, b *BMP) ([]byte, error) {
+
 	maxReadBytes := len(b.ImageData)
 	rowWidth := b.DIBHeader.Width
+
 	if (rowWidth % 2) != 0 {
 		rowWidth++
 	}
+
 	pixMap := make([]byte, 0, b.DIBHeader.Height*rowWidth/2)
 	br := bufio.NewReader(r)
 	bytesRead := 0
 	lineCt := 0
+
 	for {
 		if len(pixMap) == cap(pixMap) {
 			break
@@ -135,17 +136,15 @@ xit:
 
 // decodePaletted reads a 4 bit-per-pixel BMP image from r.
 func decodePaletted4(r io.Reader, c image.Config, b *BMP) (image.Image, error) {
+
 	maxBits := len(b.ImageData)
-	// verbose.Printf("Entry to decodePaletted4\n")
 	paletted := image.NewPaletted(image.Rect(0, 0, c.Width, c.Height), c.ColorModel.(color.Palette))
 	br := bufio.NewReader(r)
 	var bytesRead int
-	// verbose.Printf("Height = %d   Width = %d  H*W = %d\n", c.Height, c.Width, c.Height*c.Width)
-	// verbose.Printf("maxBits = %d\n", maxBits)
-	// verbose.Printf("paletted.Stride(%d)\n", paletted.Stride)
 	lastPix := c.Height * c.Width
 	rowWidth := c.Width / 2
 	rowXtra := c.Width - (rowWidth * 2)
+
 	// N.B. BMP images are stored bottom-up rather than top-down, left to right
 	for y := c.Height - 1; y >= 0; y-- {
 		var pix2 byte
@@ -170,12 +169,11 @@ func decodePaletted4(r io.Reader, c image.Config, b *BMP) (image.Image, error) {
 			if start > lastPix {
 				start = lastPix
 			}
-			//// verbose.Printf("start(%d) finish(%d) byte[%d]  %v\n", start, finish, bytesRead, b)
 			copy(paletted.Pix[start:finish], b[:])
 		}
+
 		// last byte of scanline may not have all bits used so piece it out
 		if rowXtra != 0 {
-			//// verbose.Printf("adding last pixel to line\n")
 			pix2, err = br.ReadByte()
 			if err != nil {
 				log.Printf("bmp: bad read in Pal4\n")
@@ -186,15 +184,15 @@ func decodePaletted4(r io.Reader, c image.Config, b *BMP) (image.Image, error) {
 			start += 2
 			finish = start + rowXtra
 			if finish > lastPix {
-				// verbose.Printf("LastPix\n")
+
 				finish = lastPix
 			}
 			if start > lastPix {
 				start = lastPix
 			}
-			//// verbose.Printf("+start(%d) finish(%d) byte[%d]  %v\n", start, finish, bytesRead, b)
 			copy(paletted.Pix[start:finish], b[:rowXtra])
 		}
+
 		// scanlines are padded if necessary to multiple of uint32 (DWORD)
 		for {
 			if (bytesRead % 4) == 0 {
@@ -206,7 +204,6 @@ func decodePaletted4(r io.Reader, c image.Config, b *BMP) (image.Image, error) {
 				return nil, err
 			}
 			bytesRead++
-			// verbose.Printf("byte[%d]\n", bytesRead)
 		}
 
 	}
