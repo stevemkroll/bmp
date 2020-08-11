@@ -14,12 +14,9 @@ var images = []string{
 	"8bitcompressed.bmp",
 	"8bitgray.bmp",
 	"24bit.bmp",
-	"color256.bmp",
-	"notBMP.bmp",
 }
 
 func TestReadBMP(t *testing.T) {
-
 	for i := range images {
 		path := "images/" + images[i]
 		file, err := os.Open(path)
@@ -32,7 +29,5 @@ func TestReadBMP(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		// t.Logf("\n%+v\n", img)
 	}
 }
